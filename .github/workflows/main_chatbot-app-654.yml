@@ -13,30 +13,23 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-
+    
     steps:
       - uses: actions/checkout@v4
-
+    
       - name: Set up Python version
         uses: actions/setup-python@v1
         with:
           python-version: '3.10'
-
-      - name: Create and start virtual environment
-        run: |
-          python -m venv venv
-          source venv/bin/activate
-
-      - name: Install dependencies
-        run: pip install -r requirements.txt
-
+    
+          # Removed the virtual environment creation and activation
+          # Removed the pip install step; Oryx will handle this on Azure
+    
       - name: Upload artifact for deployment jobs
         uses: actions/upload-artifact@v3
         with:
           name: python-app
-          path: |
-            .
-            !venv/
+          path: .
 
   deploy:
     runs-on: ubuntu-latest
