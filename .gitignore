@@ -1,0 +1,49 @@
+# Python-related
+*.pyc
+*.pyo
+*.pyd
+__pycache__
+*.so
+*.ipynb_checkpoints
+*.log
+*.pot
+*.pyc
+*.pyo
+*.pyd
+*.ipynb
+__pycache__/
+
+# Virtual Environments
+chatbot-venv/
+
+# Ignore all txt, json, and csv files 
+
+*.csv
+.env
+
+# Include specific JSON file
+!/azure-function/HttpTriggerJS/function.json
+!/NodeWasmFunc/node_modules/wasm_rust_library/package.json
+!/NodeWasmFunc/package-lock.json
+!/NodeWasmFunc/host.json
+!/NodeWasmFunc/local.settings.json
+!/NodeWasmFunc/package.json
+
+# But do not ignore requirements.txt
+!requirements.txt
+
+# Output directories
+tree_plot/
+results/
+tree_graph/
+
+# Other files
+.env
+tempCodeRunnerFile.py
+hs_err_pid*.log
+replay_pid*.log
+debug_output.txt
+resources/
+
+
+
