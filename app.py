@@ -14,8 +14,7 @@ from llama_index.llms.base import ChatMessage, ChatResponse, MessageRole
 from transformers import pipeline
 import numpy as np
 from gtts import gTTS
-import soundfile as sf
-import sounddevice as sd
+
 import numpy as np
 import tempfile
 
@@ -25,6 +24,9 @@ from pydub.playback import play
 import tempfile
 import os
 from gtts import gTTS
+from io import BytesIO
+from fastapi import FastAPI
+import uvicorn
 
 os.environ["OPENAI_API_KEY"] = os.getenv('OPENAI_API_KEY')
 
@@ -151,49 +153,54 @@ def chatbot(agent_message, llm_choice, input_text="", response_mode="respond by 
     active_index = uploaded_index if uploaded_index else index
     print(f"Active Index: {active_index}")  # Debug print
 
+    # Prepare the prompt
+    prompt = format_chatbot_prompt(agent_message, input_text) 
+
+    # Create the query engine before any conditional branches
     if response_mode == "respond by text":
         query_engine = active_index.as_query_engine(streaming=True)
-        prompt = format_chatbot_prompt(agent_message, input_text)
-        results = query_engine.query(prompt)
+    else:
+        query_engine = active_index.as_query_engine(streaming=False)
 
+    results = query_engine.query(prompt)
+
+    if response_mode == "respond by text":
         bot_message = ""
         for text in results.response_gen:
             bot_message += text
-            yield bot_message
+            yield bot_message  # This is streaming the message parts as they come
             time.sleep(0.1)
     else:
-        query_engine = active_index.as_query_engine(streaming=False)
-        prompt = format_chatbot_prompt(agent_message, input_text)
-        results = query_engine.query(prompt)
+        # For non-streaming modes, we only want to yield once with the complete message.
         try:
-            bot_message = process_query_results(results)
-            print(f"Bot message: {bot_message}")  # Debug print
-            yield bot_message
+            final_bot_message = process_query_results(results)
+            print(f"Bot message: {final_bot_message}")  # Debug print
         except (AttributeError, IndexError, KeyError) as e:
             print(f"Exception caught: {type(e).__name__}, {str(e)}")
-            yield "An error occurred."
+            final_bot_message = "An error occurred."
 
-
-
-
-
+        # Yield the final message (only once)
+        yield final_bot_message
 
 
 def speak_text(text):
-    print(f"Text received by speak_text: {text}") 
+
+    print(f"Text received by speak_text: {text}")
+
+    # Create a buffer
+    mp3_fp = BytesIO()
+    
     tts = gTTS(text=text, lang='en', slow=False)
-    # Create a temporary file to save the audio
-    temp_fd, temp_filename = tempfile.mkstemp(suffix=".mp3")
-    os.close(temp_fd)  # Close the file descriptor, as it's not needed
-    try:
-        tts.save(temp_filename)
-        # Read the audio data from the temporary file
-        with open(temp_filename, 'rb') as temp_mp3_file:
-            audio_data = temp_mp3_file.read()
-        return audio_data
-    finally:
-        # Ensure the temporary file is deleted
-        os.remove(temp_filename)
+
+    # Save to buffer
+    tts.write_to_fp(mp3_fp)
+    
+    # Get buffer contents (bytes) and reset pointer to the beginning
+    mp3_fp.seek(0)
+    audio_data = mp3_fp.read()
+
+    return audio_data
+
         
 def respond(user_text, agent_message, llm_choice, response_mode, chat_history):
     print(f"Received user_text: {user_text}")  # Debug print
@@ -209,22 +216,26 @@ def respond(user_text, agent_message, llm_choice, response_mode, chat_history):
         bot_message = "Please choose an LLM model before sending a message."
         chat_history.append((str(user_text), bot_message))
         return "", chat_history, None
-    if response_mode == "respond by text":
-        chat_history.append((str(user_text), ""))  
-        for bot_message in chatbot(agent_message, llm_choice, user_text, response_mode):
-            chat_history[-1] = (chat_history[-1][0], bot_message)  # Replace the last tuple with a new tuple
+
+    # initiate chat_history with the user's message first
+    chat_history.append((str(user_text), ""))
+
+    # Call the chatbot function and process the response
+    for bot_message in chatbot(agent_message, llm_choice, user_text, response_mode):
+        print(f"Received bot_message: {bot_message}")  # Debug print
+
+        if response_mode == "respond by text":
+            # Update the last chat history entry with the bot's response
+            chat_history[-1] = (chat_history[-1][0], bot_message)
             yield "", chat_history, None
 
-    else:
-        chat_history.append((str(user_text), ""))
-        for bot_message in chatbot(agent_message, llm_choice, user_text, response_mode):
-            print(f"Appending to chat history: User: {str(user_text)}, Bot: {bot_message}")
-            chat_history.append((str(user_text), bot_message))
-
-            audio_data = None
-            if response_mode == "respond by text and voice":
-                audio_data = speak_text(bot_message)
+        elif response_mode == "respond by text and voice":
+            
+            audio_data = speak_text(bot_message)  # Get the audio data for the bot's message
+            # Update the last chat history entry with the bot's response
+            chat_history[-1] = (chat_history[-1][0], bot_message)
             yield "", chat_history, audio_data
+
 
 
 
@@ -276,7 +287,7 @@ def handle_voice_input(agent_message, llm_choice, response_mode, voice_chunk, ch
 
 
 
-def main():
+def create_gradio_app():
     global index
     global service_context
 
@@ -317,7 +328,7 @@ def main():
                 [],
                 elem_id="chatbot",
                 bubble_full_width=False,
-                avatar_images=(None, os.path.join(os.path.dirname(__file__), "seamgen-chatbot-icon.png"))
+                avatar_images= (None, os.path.join(os.path.dirname(__file__), "seamgen-chatbot-icon.png"))
             )
             audio_component = gr.Audio(autoplay=True, label="Chatbot Voice Response")
 
@@ -344,8 +355,21 @@ def main():
         )
 
 
-    app.queue().launch(share=True)
+        return app
+
+def main():
+    app = FastAPI()
+
+    @app.get("/")
+    def read_main():
+        return {"message": "This is your main app"}
+
+    gradio_interface = create_gradio_app()
+    app = gr.mount_gradio_app(app, gradio_interface, path="/gradio")
+
+
 
 if __name__ == "__main__":
-    main()
+    application = main()
+    uvicorn.run(application, host="0.0.0.0", port=8000)  # This starts the server.
 
