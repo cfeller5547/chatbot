@@ -22,8 +22,10 @@ jobs:
         with:
           python-version: '3.10'
     
-          # Removed the virtual environment creation and activation
-          # Removed the pip install step; Oryx will handle this on Azure
+      - name: Install Uvicorn
+        run: |
+          python -m pip install --upgrade pip
+          pip install uvicorn
     
       - name: Upload artifact for deployment jobs
         uses: actions/upload-artifact@v3
