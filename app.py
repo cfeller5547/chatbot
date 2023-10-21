@@ -27,7 +27,7 @@ from gtts import gTTS
 from io import BytesIO
 from fastapi import FastAPI
 import uvicorn
-
+import gunicorn
 os.environ["OPENAI_API_KEY"] = os.getenv('OPENAI_API_KEY')
 
 MAX_RETRIES = 10
@@ -371,4 +371,5 @@ gr.mount_gradio_app(app, gradio_interface, path="/gradio")
 # The main check is used to run the server when the script is executed directly
 if __name__ == "__main__":
     import uvicorn
+  
     uvicorn.run(app, host="0.0.0.0", port=8000) 

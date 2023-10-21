@@ -38,6 +38,7 @@ google-auth-oauthlib==0.4.6
 google-pasta==0.2.0
 gpt-index==0.7.13
 gradio==3.45.2
+gunicorn==21.2.0
 gradio_client==0.5.3
 greenlet==2.0.2
 grpcio==1.59.0
