@@ -365,11 +365,13 @@ def main():
         return {"message": "This is your main app"}
 
     gradio_interface = create_gradio_app()
-    app = gr.mount_gradio_app(app, gradio_interface, path="/gradio")
+    gr.mount_gradio_app(app, gradio_interface, path="/gradio")
 
+    return app  
 
 
 if __name__ == "__main__":
-    application = main()
-    uvicorn.run(application, host="0.0.0.0", port=8000)  # This starts the server.
+    app = main()  
+    uvicorn.run(app, host="0.0.0.0", port=8000)  # Pass the FastAPI instance to Uvicorn
+
 
