@@ -357,21 +357,18 @@ def create_gradio_app():
 
         return app
 
-def main():
-    app = FastAPI()
 
-    @app.get("/")
-    def read_main():
-        return {"message": "This is your main app"}
+app = FastAPI()
 
-    gradio_interface = create_gradio_app()
-    gr.mount_gradio_app(app, gradio_interface, path="/gradio")
+@app.get("/")
+def read_main():
+    return {"message": "This is your main app"}
 
-    return app  
+# Create and mount the Gradio interface
+gradio_interface = create_gradio_app()
+gr.mount_gradio_app(app, gradio_interface, path="/gradio")
 
-
+# The main check is used to run the server when the script is executed directly
 if __name__ == "__main__":
-    app = main()  
-    uvicorn.run(app, host="0.0.0.0", port=8000)  # Pass the FastAPI instance to Uvicorn
-
-
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8000) 
