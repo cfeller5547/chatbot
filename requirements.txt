@@ -25,7 +25,7 @@ decorator==5.1.1
 diskcache==5.6.3
 exceptiongroup==1.1.2
 executing==1.2.0
-fastapi==0.100.0
+
 filelock==3.12.2
 flatbuffers==23.5.26
 fonttools==4.41.1
@@ -39,7 +39,7 @@ google-auth-oauthlib==0.4.6
 google-pasta==0.2.0
 gpt-index==0.7.13
 gradio==3.45.2
-gunicorn==21.2.0
+
 gradio_client==0.5.3
 greenlet==2.0.2
 grpcio==1.59.0
@@ -152,7 +152,7 @@ typing_extensions==4.7.1
 tzdata==2023.3
 uc-micro-py==1.0.2
 urllib3==1.26.16
-uvicorn==0.23.2
+
 wcwidth==0.2.6
 websockets==11.0.3
 Werkzeug==3.0.0

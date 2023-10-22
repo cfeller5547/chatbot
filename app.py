@@ -26,11 +26,13 @@ import os
 from gtts import gTTS
 from io import BytesIO
 from fastapi import FastAPI
-import uvicorn
-import gunicorn
+
 from flask import Flask, request, redirect, url_for
 import logging
 
+
+# Initialize Flask
+app = Flask(__name__)
 
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
@@ -46,8 +48,7 @@ index = load_index_from_storage(storage_context=storage_context) # load index
 uploaded_index = None
 chat_history_global = []
 
-# Initialize Flask
-app = Flask(__name__)
+
 
 
 # for pop up messages
