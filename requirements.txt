@@ -30,6 +30,7 @@ filelock==3.12.2
 flatbuffers==23.5.26
 fonttools==4.41.1
 frozenlist==1.4.0
+Flask==3.0.0
 fsspec==2023.6.0
 future==0.18.3
 gast==0.5.4
@@ -151,7 +152,7 @@ typing_extensions==4.7.1
 tzdata==2023.3
 uc-micro-py==1.0.2
 urllib3==1.26.16
-uvicorn==0.23.1
+uvicorn==0.23.2
 wcwidth==0.2.6
 websockets==11.0.3
 Werkzeug==3.0.0

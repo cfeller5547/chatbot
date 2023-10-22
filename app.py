@@ -28,6 +28,11 @@ from io import BytesIO
 from fastapi import FastAPI
 import uvicorn
 import gunicorn
+from flask import Flask, request, redirect, url_for
+
+
+
+
 os.environ["OPENAI_API_KEY"] = os.getenv('OPENAI_API_KEY')
 
 MAX_RETRIES = 10
@@ -358,18 +363,24 @@ def create_gradio_app():
         return app
 
 
-app = FastAPI()
 
-@app.get("/")
-def read_main():
-    return {"message": "This is your main app"}
 
-# Create and mount the Gradio interface
-gradio_interface = create_gradio_app()
-gr.mount_gradio_app(app, gradio_interface, path="/gradio")
 
-# The main check is used to run the server when the script is executed directly
+# Initialize Flask
+app = Flask(__name__)
+
+@app.route('/')
+def index():
+    return redirect(url_for('gradio_ui'))
+
+
+@app.route('/api/gradio', methods=['GET', 'POST'])
+def gradio_ui():
+    gradio_app = create_gradio_app()
+    return gradio_app.serve(request)
+
+# For local testing, you can use this
 if __name__ == "__main__":
-    import uvicorn
-  
-    uvicorn.run(app, host="0.0.0.0", port=8000) 
+    app.run(host="0.0.0.0", port=8000, debug=True)
+
+    
