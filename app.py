@@ -25,13 +25,6 @@ import tempfile
 import os
 from gtts import gTTS
 from io import BytesIO
-from fastapi import FastAPI
-import uvicorn
-import gunicorn
-from flask import Flask, request, redirect, url_for
-
-
-
 
 os.environ["OPENAI_API_KEY"] = os.getenv('OPENAI_API_KEY')
 
@@ -292,7 +285,7 @@ def handle_voice_input(agent_message, llm_choice, response_mode, voice_chunk, ch
 
 
 
-def create_gradio_app():
+def main():
     global index
     global service_context
 
@@ -360,27 +353,7 @@ def create_gradio_app():
         )
 
 
-        return app
+    app.queue().launch(share=True)
 
-
-
-
-
-# Initialize Flask
-app = Flask(__name__)
-
-@app.route('/')
-def index():
-    return redirect(url_for('gradio_ui'))
-
-
-@app.route('/api/gradio', methods=['GET', 'POST'])
-def gradio_ui():
-    gradio_app = create_gradio_app()
-    return gradio_app.serve(request)
-
-# For local testing, you can use this
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=8000, debug=True)
-
-    
+    main()
