@@ -25,8 +25,19 @@ import tempfile
 import os
 from gtts import gTTS
 from io import BytesIO
+from fastapi import FastAPI
+import uvicorn
+import gunicorn
+from flask import Flask, request, redirect, url_for
+import logging
+
+
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger(__name__)
 
 os.environ["OPENAI_API_KEY"] = os.getenv('OPENAI_API_KEY')
+
+
 
 MAX_RETRIES = 10
 service_context = None    
@@ -34,6 +45,9 @@ storage_context = StorageContext.from_defaults(persist_dir='./storage')
 index = load_index_from_storage(storage_context=storage_context) # load index
 uploaded_index = None
 chat_history_global = []
+
+# Initialize Flask
+app = Flask(__name__)
 
 
 # for pop up messages
@@ -285,7 +299,7 @@ def handle_voice_input(agent_message, llm_choice, response_mode, voice_chunk, ch
 
 
 
-def main():
+def create_gradio_app():
     global index
     global service_context
 
@@ -353,7 +367,16 @@ def main():
         )
 
 
-    app.queue().launch(share=True)
+        return app
 
-if __name__ == "__main__":
-    main()
+
+@app.route('/')
+def index():
+    return redirect(url_for('gradio_ui'))
+
+
+@app.route('/api/gradio', methods=['GET', 'POST'])
+def gradio_ui():
+    gradio_app = create_gradio_app()
+    return gradio_app.serve(request)
+
